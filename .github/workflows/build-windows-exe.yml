@@ -30,7 +30,8 @@ jobs:
         shell: cmd
         run: |
           npm install
-          set ELECTRON_BUNDLE=true && npx vite build --outDir dist-desktop --emptyOutDir
+          set ELECTRON_BUNDLE=true
+          npx vite build --outDir dist-desktop --emptyOutDir
 
       - name: Prepare Electron desktop wrapper
         shell: pwsh
