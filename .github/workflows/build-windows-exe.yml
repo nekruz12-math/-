@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Configure npm retries
         shell: cmd
@@ -28,32 +28,34 @@ jobs:
 
       - name: Install dependencies and build offline app bundle
         shell: cmd
+        env:
+          ELECTRON_BUNDLE: 'true'
         run: |
-          npm install
-          set ELECTRON_BUNDLE=true
+          npm install --legacy-peer-deps --no-audit --no-fund
           npx vite build --outDir dist-desktop --emptyOutDir
 
       - name: Prepare Electron desktop wrapper
         shell: pwsh
         run: |
+          if (Test-Path electron-pkg) { Remove-Item -Recurse -Force electron-pkg }
           New-Item -ItemType Directory -Force -Path electron-pkg | Out-Null
           Copy-Item -Recurse -Force dist-desktop electron-pkg\app
           @'
           {
             "name": "kitobkhona-maktab-windows",
             "version": "1.0.0",
-            "description": "Китобхонаи Мактаб — Offline Desktop Application for Windows 10/11",
+            "description": "Kitobkhona Maktab - Offline Desktop Application for Windows 10/11",
             "main": "main.js",
             "scripts": {
               "build-win": "electron-builder --win nsis --publish never"
             },
             "build": {
               "appId": "tj.school.kitobkhona",
-              "productName": "Китобхонаи Мактаб",
+              "productName": "Kitobkhona-Maktab",
               "files": ["main.js", "app/**/*"],
               "win": {
                 "target": [
-                  { "target": "nsis", "arch": ["x64", "ia32"] }
+                  { "target": "nsis", "arch": ["x64"] }
                 ]
               },
               "nsis": {

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   HardDriveDownload,
   RotateCcw,
@@ -42,6 +42,13 @@ export const WindowsInstallView: React.FC<WindowsInstallViewProps> = ({
   const [schoolLogo, setSchoolLogo] = useState(storeData.settings.schoolLogo || '');
   const [confirmClear, setConfirmClear] = useState(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setSchoolName(storeData.settings.schoolName);
+    setAcademicYear(storeData.settings.academicYear);
+    setDefaultReturnDate(storeData.settings.defaultReturnDate);
+    setSchoolLogo(storeData.settings.schoolLogo || '');
+  }, [storeData.settings]);
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +137,7 @@ export const WindowsInstallView: React.FC<WindowsInstallViewProps> = ({
               <div className="mt-1.5 flex items-center gap-3">
                 <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
                   <img
-                    src={schoolLogo || '/icon.svg'}
+                    src={schoolLogo || './icon.svg'}
                     alt="Logo"
                     className="h-full w-full object-cover"
                   />

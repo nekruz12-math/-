@@ -487,7 +487,7 @@ export default function App() {
         {/* Brand */}
         <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <img
-            src={store.settings.schoolLogo || '/icon.svg'}
+            src={store.settings.schoolLogo || './icon.svg'}
             alt={t.appName}
             className="h-9 w-9 rounded-lg shrink-0 object-cover"
             referrerPolicy="no-referrer"
