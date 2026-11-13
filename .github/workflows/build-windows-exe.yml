@@ -59,7 +59,7 @@ jobs:
               appId: 'tj.school.kitobkhona',
               productName: 'Kitobkhona Maktab',
               npmRebuild: false,
-              publish: null,
+              publish: [],
               generateUpdatesFilesForAllChannels: false,
               directories: { output: 'dist' },
               files: ['main.js', 'app/**/*'],
