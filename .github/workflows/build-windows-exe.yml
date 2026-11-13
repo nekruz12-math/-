@@ -10,7 +10,8 @@ jobs:
     runs-on: windows-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ELECTRON_BUILDER_BINARIES_DOWNLOAD_RETRIES: 10
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_BUILDER_BINARIES_DOWNLOAD_RETRIES: '10'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,41 +46,43 @@ jobs:
           New-Item -ItemType Directory -Force -Path electron-pkg | Out-Null
           Copy-Item -Recurse -Force dist-desktop electron-pkg\app
           @'
-          {
-            "name": "kitobkhona-maktab-windows",
-            "version": "1.0.0",
-            "description": "Kitobkhona Maktab - Offline Desktop Application for Windows 10/11",
-            "main": "main.js",
-            "scripts": {
-              "build-win": "electron-builder --win nsis --publish never"
+          const fs = require('fs');
+          const pkg = {
+            name: 'kitobkhona-maktab-windows',
+            version: '1.0.0',
+            description: 'Kitobkhona Maktab - Offline Desktop Application for Windows 10/11',
+            author: 'School Library',
+            main: 'main.js',
+            scripts: {
+              'build-win': 'electron-builder --win nsis --publish never'
             },
-            "build": {
-              "appId": "tj.school.kitobkhona",
-              "productName": "Kitobkhona-Maktab",
-              "directories": {
-                "output": "dist"
+            build: {
+              appId: 'tj.school.kitobkhona',
+              productName: 'Kitobkhona Maktab',
+              npmRebuild: false,
+              directories: { output: 'dist' },
+              files: ['main.js', 'app/**/*'],
+              win: {
+                target: [{ target: 'nsis', arch: ['x64'] }],
+                signAndEditExecutable: false
               },
-              "files": ["main.js", "app/**/*"],
-              "win": {
-                "target": [
-                  { "target": "nsis", "arch": ["x64"] }
-                ]
-              },
-              "nsis": {
-                "oneClick": false,
-                "allowToChangeInstallationDirectory": true,
-                "createDesktopShortcut": true,
-                "createStartMenuShortcut": true,
-                "shortcutName": "Китобхонаи Мактаб",
-                "artifactName": "Kitobkhona-Maktab-Setup-${version}.exe"
+              nsis: {
+                oneClick: false,
+                allowToChangeInstallationDirectory: true,
+                createDesktopShortcut: true,
+                createStartMenuShortcut: true,
+                shortcutName: 'Kitobkhona Maktab',
+                artifactName: 'Kitobkhona-Maktab-Setup-${version}.exe'
               }
             },
-            "devDependencies": {
-              "electron": "^33.2.0",
-              "electron-builder": "^25.1.8"
+            devDependencies: {
+              electron: '33.2.1',
+              'electron-builder': '25.1.8'
             }
-          }
-          '@ | Set-Content -Encoding utf8 electron-pkg\package.json
+          };
+          fs.writeFileSync('electron-pkg/package.json', JSON.stringify(pkg, null, 2));
+          '@ | node -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           @'
           const { app, BrowserWindow, Menu } = require('electron');
           const path = require('path');
@@ -113,14 +116,20 @@ jobs:
           });
           '@ | Set-Content -Encoding utf8 electron-pkg\main.js
 
-      - name: Build Windows Setup (.exe)
+      - name: Install Electron builder dependencies
         working-directory: electron-pkg
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           npm install --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npx electron-builder --win nsis --publish never
+
+      - name: Build Windows Setup (.exe)
+        working-directory: electron-pkg
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\node_modules\.bin\electron-builder.cmd --win nsis --publish never
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-ChildItem -Path dist
 
