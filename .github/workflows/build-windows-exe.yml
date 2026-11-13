@@ -9,7 +9,6 @@ jobs:
   build-windows-exe:
     runs-on: windows-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       ELECTRON_BUILDER_BINARIES_DOWNLOAD_RETRIES: '10'
     steps:
@@ -60,6 +59,8 @@ jobs:
               appId: 'tj.school.kitobkhona',
               productName: 'Kitobkhona Maktab',
               npmRebuild: false,
+              publish: null,
+              generateUpdatesFilesForAllChannels: false,
               directories: { output: 'dist' },
               files: ['main.js', 'app/**/*'],
               win: {
@@ -71,6 +72,7 @@ jobs:
                 allowToChangeInstallationDirectory: true,
                 createDesktopShortcut: true,
                 createStartMenuShortcut: true,
+                differentialPackage: false,
                 shortcutName: 'Kitobkhona Maktab',
                 artifactName: 'Kitobkhona-Maktab-Setup-${version}.exe'
               }
