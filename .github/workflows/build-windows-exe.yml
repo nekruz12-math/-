@@ -21,22 +21,26 @@ jobs:
           node-version: '22'
 
       - name: Configure npm retries
-        shell: cmd
+        shell: pwsh
         run: |
           npm config set fetch-retry-mintimeout 20000
           npm config set fetch-retry-maxtimeout 120000
 
       - name: Install dependencies and build offline app bundle
-        shell: cmd
+        shell: pwsh
         env:
           ELECTRON_BUNDLE: 'true'
         run: |
+          $ErrorActionPreference = 'Stop'
           npm install --legacy-peer-deps --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx vite build --outDir dist-desktop --emptyOutDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Prepare Electron desktop wrapper
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           if (Test-Path electron-pkg) { Remove-Item -Recurse -Force electron-pkg }
           New-Item -ItemType Directory -Force -Path electron-pkg | Out-Null
           Copy-Item -Recurse -Force dist-desktop electron-pkg\app
@@ -52,6 +56,9 @@ jobs:
             "build": {
               "appId": "tj.school.kitobkhona",
               "productName": "Kitobkhona-Maktab",
+              "directories": {
+                "output": "dist"
+              },
               "files": ["main.js", "app/**/*"],
               "win": {
                 "target": [
@@ -108,13 +115,18 @@ jobs:
 
       - name: Build Windows Setup (.exe)
         working-directory: electron-pkg
-        shell: cmd
+        shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           npm install --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx electron-builder --win nsis --publish never
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem -Path dist
 
       - name: Upload Windows .EXE Installer
         uses: actions/upload-artifact@v4
         with:
           name: Kitobkhona-Maktab-Windows-EXE
           path: electron-pkg/dist/*.exe
+          if-no-files-found: error
