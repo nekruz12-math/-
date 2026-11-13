@@ -1,0 +1,6 @@
+{
+  "name": "Китобхонаи Мактаб — Windows School Library",
+  "description": "Барномаи дузабона (Тоҷикӣ/Русӣ) барои идоракунии китобхонаи мактаб, иҷораи солонаи китобҳои фаннӣ ва китобҳои бадеӣ дар Windows 10–11.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

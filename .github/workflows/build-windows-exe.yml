@@ -1,0 +1,108 @@
+name: Build Windows EXE Installer
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies and build offline app bundle
+        shell: cmd
+        run: |
+          npm install
+          set ELECTRON_BUNDLE=true && npx vite build --outDir dist-desktop --emptyOutDir
+
+      - name: Prepare Electron desktop wrapper
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path electron-pkg | Out-Null
+          Copy-Item -Recurse -Force dist-desktop electron-pkg\app
+          @'
+          {
+            "name": "kitobkhona-maktab-windows",
+            "version": "1.0.0",
+            "description": "Китобхонаи Мактаб — Offline Desktop Application for Windows 10/11",
+            "main": "main.js",
+            "scripts": {
+              "build-win": "electron-builder --win nsis"
+            },
+            "build": {
+              "appId": "tj.school.kitobkhona",
+              "productName": "Китобхонаи Мактаб",
+              "files": ["main.js", "app/**/*"],
+              "win": {
+                "target": [
+                  { "target": "nsis", "arch": ["x64", "ia32"] }
+                ]
+              },
+              "nsis": {
+                "oneClick": false,
+                "allowToChangeInstallationDirectory": true,
+                "createDesktopShortcut": true,
+                "createStartMenuShortcut": true,
+                "shortcutName": "Китобхонаи Мактаб",
+                "artifactName": "Kitobkhona-Maktab-Setup-${version}.exe"
+              }
+            },
+            "devDependencies": {
+              "electron": "^33.2.0",
+              "electron-builder": "^25.1.8"
+            }
+          }
+          '@ | Set-Content -Encoding utf8 electron-pkg\package.json
+          @'
+          const { app, BrowserWindow, Menu } = require('electron');
+          const path = require('path');
+
+          function createWindow() {
+            const win = new BrowserWindow({
+              width: 1360,
+              height: 860,
+              minWidth: 1024,
+              minHeight: 680,
+              title: 'Китобхонаи Мактаб',
+              autoHideMenuBar: true,
+              webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true
+              }
+            });
+            Menu.setApplicationMenu(null);
+            win.loadFile(path.join(__dirname, 'app', 'index.html'));
+          }
+
+          app.whenReady().then(() => {
+            createWindow();
+            app.on('activate', () => {
+              if (BrowserWindow.getAllWindows().length === 0) createWindow();
+            });
+          });
+
+          app.on('window-all-closed', () => {
+            if (process.platform !== 'darwin') app.quit();
+          });
+          '@ | Set-Content -Encoding utf8 electron-pkg\main.js
+
+      - name: Build Windows Setup (.exe)
+        working-directory: electron-pkg
+        shell: cmd
+        run: |
+          npm install
+          npm run build-win
+
+      - name: Upload Windows .EXE Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kitobkhona-Maktab-Windows-EXE
+          path: electron-pkg/dist/*.exe
